@@ -50,6 +50,8 @@ def orders_by_stock_over_time(tx_df, type, calendar):
 def cumul_invested(transactions_df, calendar):
 
     invested = transactions_df[transactions_df['Type']=='IMPORT']
+    print("########## INVESTED")
+    print(invested)
     invested['Amount'] = pd.to_numeric(invested['FX'])  * pd.to_numeric(invested['Quantity']) * pd.to_numeric(invested['Cost'])
     imports_by_day = invested.groupby('Date')['Amount'].sum()
     imports_by_day_df = pd.DataFrame(imports_by_day).reset_index()

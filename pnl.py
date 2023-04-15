@@ -11,19 +11,36 @@ def pnl_by_stock_latest(tx_df, custom_prices_df, asset_universe, start_date):
 
     from datetime import datetime, timedelta
 
-    # Load historical prices of the individual stocks
-    print(liq_investments)
-    quotes = yf.download(tickers=list(liq_investments), start=start_date, interval="1d")
-    df_quotes = quotes['Adj Close'].ffill()
-    latest_asset_prices = df_quotes[-1:].T
-    latest_asset_prices = latest_asset_prices.reset_index()
-    latest_asset_prices.columns = ["Asset", "Price"]
-    latest_asset_prices = latest_asset_prices.set_index("Asset")
-    latest_asset_prices = latest_asset_prices.to_dict()["Price"]
-    last_custom_prices = custom_prices_df.groupby('Asset')['Unit Price'].last().to_dict()
-    latest_asset_prices.update(last_custom_prices)
-    latest_asset_prices = {k: float(v) for k, v in latest_asset_prices.items()}
-    print(latest_asset_prices)
+    if len(liq_investments) > 0:
+
+        # Load historical prices of the individual stocks
+        print(liq_investments)
+        quotes = yf.download(tickers=list(liq_investments), start=start_date, interval="1d")
+        df_quotes = quotes['Adj Close'].ffill()
+        latest_liq_asset_prices = df_quotes[-1:].T
+        latest_liq_asset_prices = latest_liq_asset_prices.reset_index()
+        latest_liq_asset_prices.columns = ["Asset", "Price"]
+        latest_liq_asset_prices = latest_liq_asset_prices.set_index("Asset")
+        latest_liq_asset_prices = latest_liq_asset_prices.to_dict()["Price"]
+
+        # New dictionary with revised prices
+        revised_prices_dict = {}
+
+        # Divide prices by 100 if key ends with ".L"
+        for key, value in latest_liq_asset_prices.items():
+            if key in uk_stocks:
+                value = value / 100
+            revised_prices_dict[key] = value
+
+        last_custom_prices = custom_prices_df.groupby('Asset')['Unit Price'].last().to_dict()
+        revised_prices_dict.update(last_custom_prices)
+        latest_asset_prices = {k: float(v) for k, v in revised_prices_dict.items()}
+        print(latest_asset_prices)
+
+    else:
+        latest_asset_prices = custom_prices_df.groupby('Asset')['Unit Price'].last().to_dict()
+        latest_asset_prices = {k: float(v) for k, v in latest_asset_prices.items()}
+
 
     # create a transactions dataframe with only investments
     transactions = tx_df.loc[(tx_df["Class"] == "Investment") | (tx_df["Class"] == "Venture") | (tx_df["Class"] == "Income")]
@@ -31,35 +48,26 @@ def pnl_by_stock_latest(tx_df, custom_prices_df, asset_universe, start_date):
     transactions["Cost"] = pd.to_numeric(transactions["Cost"], errors='coerce')
     transactions
 
-    # New dictionary with revised prices
-    revised_prices_dict = {}
-
-    # Divide prices by 100 if key ends with ".L"
-    for key, value in latest_asset_prices.items():
-        if key in uk_stocks:
-            value = value / 100
-        revised_prices_dict[key] = value
-
     # group the transactions by asset
     grouped_transactions = transactions.groupby("Underlying_Asset")
-    print("grouped_transactions")
-    print(grouped_transactions)
-    for key, item in grouped_transactions:
-        print("KEY")
-        print(grouped_transactions.get_group(key), "\n\n")
+    # print("grouped_transactions")
+    # print(grouped_transactions)
+    # for key, item in grouped_transactions:
+    #     print("KEY")
+    #     print(grouped_transactions.get_group(key), "\n\n")
 
 
     # create a dictionary to store the current market prices for each asset
-    market_prices = revised_prices_dict
-    print("market_prices")
-    print(market_prices)
+    market_prices = latest_asset_prices
+    # print("market_prices")
+    # print(market_prices)
 
     # calculate the net profit or loss for each stock
     profits_losses = []
     for asset, transactions in grouped_transactions:
 
-        print("asset in grouped tx")
-        print(asset)
+        # print("asset in grouped tx")
+        # print(asset)
 
         sell_transactions = transactions[transactions["Type"]=="SELL"]
         buy_transactions = transactions[transactions["Type"].isin(["BUY", "IMPORT"])]
@@ -74,6 +82,7 @@ def pnl_by_stock_latest(tx_df, custom_prices_df, asset_universe, start_date):
         # calculate the market value of the remaining shares
         remaining_quantity = buy_transactions["Quantity"].sum() + sell_transactions["Quantity"].sum()
         current_market_value = remaining_quantity * market_prices[asset] if remaining_quantity > 0 else 0
+        print("current_market_value")
         print(current_market_value)
         current_market_value = float(current_market_value)
         # add dividends
@@ -85,19 +94,19 @@ def pnl_by_stock_latest(tx_df, custom_prices_df, asset_universe, start_date):
 
     # create a new dataframe to store the results
     results = pd.DataFrame({"asset": grouped_transactions.groups.keys(), "profits_losses": profits_losses})
-    print("results")
-    print(results)
+    # print("results")
+    # print(results)
 
 
     ### EXTRACTING THE LIST OF INVESTMENTS IN ASSET UNIVERSE
-    currency_dict = {k: v['Ccy'] for k, v in asset_universe.items() if v['Class'] == 'Investment'}
-    print("#########    currency_dict")
-    print(currency_dict)
+    currency_dict = {k: v['Ccy'] for k, v in asset_universe.items() if v['Class'] in ('Investment', 'Venture')}
+    # print("#########    currency_dict")
+    # print(currency_dict)
     asset_fx_prices = {}
 
     for asset, ccy in currency_dict.items():
-        print(asset)
-        print(ccy)
+        # print(asset)
+        # print(ccy)
         if ccy == "SGD":
             asset_fx_prices[asset] = 1
         else:

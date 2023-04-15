@@ -110,16 +110,16 @@ def generate_report_py():
     buys_df = buys_df[buys_df['Amount']!= 0]
     print("BUYS DF")
     print(buys_df)
-    buy_bubble_sizes = buys_df['Amount'] / 200
+    buy_bubble_sizes = buys_df['Amount']
 
     sells_df = orders_by_stock_over_time(tx_df, "SELL", df_days)
     sells_df = sells_df[sells_df['Amount']!=0]
     print("SELLS DF")
     print(sells_df)
-    sell_bubble_sizes = sells_df['Amount'] / 200
+    sell_bubble_sizes = sells_df['Amount']
 
     hist_ptf_value_and_cumul_invested_df = hist_ptf_value_and_cumul_invested(tx_df, df_days, custom_prices_df)
-    sorted_data = pnl_by_stock_latest(tx_df, custom_prices_df, asset_universe, start_date=tx_df["Date"][1])
+    sorted_data = pnl_by_stock_latest(tx_df, custom_prices_df, asset_universe, start_date=tx_df["Date"][0])
 
     portfolio_today_df = portfolio_today(tx_df, custom_prices_df, asset_universe)
 

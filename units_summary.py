@@ -37,6 +37,8 @@ def units_summary(tx_df, date_range, hist_ptf_df):
   print("units summary 2")
   print(units_summary)
   units_summary.loc[:, 'Cash_Move_SGD_cumul'] = units_summary.loc[:, 'Cash_Move_SGD'].cumsum()
+  print("units summary 2.5")
+  print(units_summary)
   
   ## CALCULATING NAV_PRICE BY BUYING AND SELLING UNITS AT LAST NIGHT NAV
   condition_1 = units_summary.loc[:, 'Cash_Move_SGD']

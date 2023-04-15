@@ -42,7 +42,8 @@ fx_universe = {
 # }
 
 
-master_spreadsheet_url = 'https://docs.google.com/spreadsheets/d/1w3vNkIAjBSctKdp37CFJ7VJEz1enVSj87i9Eon2bgoA/edit#gid=419135202'
+master_spreadsheet_url = 'https://docs.google.com/spreadsheets/d/1OQQqSNSjDnQj4s-eS35-684OiEAnRkJvNeqRPGe60eI/edit#gid=984955021'
+
 asset_universe_df = get_spreadsheet_data_into_a_df(master_spreadsheet_url, sheet_name="Asset_Universe")
 print("asset_universe_df")
 print(asset_universe_df)

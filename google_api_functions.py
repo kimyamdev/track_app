@@ -49,6 +49,7 @@ def get_spreadsheet_data_into_a_df(spreadsheet_url, sheet_name):
     print(values[1:])
     print(values[0])
     df = pd.DataFrame(values[1:], columns=values[0])
+    print("TX DF FROM GOOGLE SPREADSHEET")
     print(df)
     return df
 

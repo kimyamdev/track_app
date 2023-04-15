@@ -8,6 +8,8 @@ def historical_portfolio(tx_df, custom_prices_df):
 
     ### DEFINING THE HISTORICAL RANGE (CALENDAR) IN A DATAFRAME THAT WE WILL RE-USE
     startdate = tx_df["Date"][0]
+    # print("############### start date ###################")
+    # print(startdate)
     date_range = pd.date_range(start=startdate, end=date.today(), freq='D')
     df_days = pd.DataFrame({'Date': date_range})
 
@@ -47,7 +49,7 @@ def historical_portfolio(tx_df, custom_prices_df):
                 asset_prices = pd.DataFrame({'Price': prices})
                 assets_data[asset] = {"Prices": asset_prices}
 
-                
+
                 num = [1] * len(date_range)
                 s = pd.Series(num)
                 fx_prices = pd.DataFrame({'Date': date_range, 'FX_Price': s})
@@ -63,7 +65,11 @@ def historical_portfolio(tx_df, custom_prices_df):
                     quote = yf.download(tickers=asset, start=startdate, interval="1d") / 100
                 else:
                     assets_data[asset] = asset
+                    # print(" THIS asset")
+                    # print(asset)
                     quote = yf.download(tickers=asset, start=startdate, interval="1d")
+                    # print("################ THIS quote ################")
+                    # print(quote)
 
                 prices = quote['Adj Close'].ffill()
                 asset_prices = pd.DataFrame({'Price': prices})
@@ -80,28 +86,41 @@ def historical_portfolio(tx_df, custom_prices_df):
             filtered_custom_prices_df = custom_prices_df[custom_prices_df['Asset'] == asset]
             filtered_custom_prices_df['Unit Price'] = pd.to_numeric(filtered_custom_prices_df['Unit Price'])
             filtered_custom_prices_df["Date"] = pd.to_datetime(filtered_custom_prices_df["Date"], format="%d/%m/%Y")
+            # print("###################### ASSET ##########################")
+            # print(asset)
+            # print("filtered_custom_prices_df")
+            # print(filtered_custom_prices_df)
 
             if not filtered_custom_prices_df.empty:
                 local_start_date=filtered_custom_prices_df["Date"].iloc[0]
             else:
                 print("Dataframe is empty!")
 
-            local_date_range = pd.date_range(start=local_start_date, end=date.today(), freq='D')
-            local_df_days = pd.DataFrame({'Date': local_date_range})
-
-            prices = local_df_days.merge(filtered_custom_prices_df, on="Date", how="outer")
+            # local_date_range = pd.date_range(start=local_start_date, end=date.today(), freq='D')
+            # local_df_days = pd.DataFrame({'Date': local_date_range})
+            prices = df_days.merge(filtered_custom_prices_df, on="Date", how="outer")
             prices = prices.sort_values(by="Date", ascending=True)
-
             prices = prices.ffill()
-
+            # print("PRICES 1")
+            # print(prices)
             prices = prices[prices['Date'] >= startdate]
-
-            asset_prices = pd.DataFrame({'Price': prices['Unit Price']}, index=prices['Date'])
+            # print("PRICES 2")
+            # print(prices)
+            # print("LEN DATES")
+            # print(len(date_range))
+            # print("LEN PRICES")
+            # print(len(prices))
+            asset_prices_df = pd.DataFrame({'Date': date_range, 'Price': prices['Unit Price']})
+            asset_prices = asset_prices_df.set_index('Date')
+            # print("PRICES 3")
+            # print(asset_prices)
             assets_data[asset] = {"Prices": asset_prices}
             fx_quote = yf.download(tickers=asset_universe[asset]["Ccy"], start=startdate, interval="1d")
             fx_prices = fx_quote['Adj Close'].ffill()
             fx_prices = pd.DataFrame({'FX_Price': fx_prices})
             assets_data[asset]["FX_Prices"] = fx_prices
+            # print("############ assets_data[asset] #################")
+            # print(assets_data[asset])
 
         else:
             print("Can't find this asset")
@@ -136,14 +155,14 @@ def historical_portfolio(tx_df, custom_prices_df):
         df['Class'] = asset_universe[asset]["Class"]
         df['Currency'] = asset_universe[asset]["Ccy"]
         df = df.fillna(0)
-        print("############ DF ################")
-        print(df)
 
         if asset_universe[asset]['Class'] == 'Cash':
             df[str('total_position_'+ asset)] = df['Cumul_Qty'] * df['Price']
         else:
             df[str('total_position_' + asset)] = df['Cumul_Qty'] * df['Price'] * df['FX_Price']
-        
+        df = df.fillna(0)
+        # print("############ DF FILL NA ################")
+        # print(df)
         historical_positions.append(df)
 
     concat_list = []
@@ -154,23 +173,24 @@ def historical_portfolio(tx_df, custom_prices_df):
 
     hist_ptf_df = pd.concat(concat_list, axis=1)
     hist_ptf_df = hist_ptf_df.ffill()
-    print("hist_ptf_df 2")
-    print(hist_ptf_df)
+    # print("hist_ptf_df 2")
+    # print(hist_ptf_df)
 
     cols = hist_ptf_df.columns
-    print("#################### hist_ptf_df ####################")
-    print(hist_ptf_df)
+    # print("#################### hist_ptf_df ####################")
+    # print(hist_ptf_df)
+    
     hist_ptf_df["Total Portfolio Value (SGD)"] = hist_ptf_df.sum(axis=1)
-    print("hist_ptf_df 2")
-    print(hist_ptf_df)
+    # print("hist_ptf_df 2")
+    # print(hist_ptf_df)
     hist_ptf_df[cols]  = hist_ptf_df[cols].div(hist_ptf_df[cols].sum(axis=1), axis=0)
-    print("hist_ptf_df 3")
-    print(hist_ptf_df)
+    # print("hist_ptf_df 3")
+    # print(hist_ptf_df)
     hist_ptf_df = hist_ptf_df.set_index(date_range)
     hist_ptf_df = hist_ptf_df.reset_index()
     hist_ptf_df = hist_ptf_df.rename({'index': 'Date'}, axis=1)
 
-    print("################ hist_ptf_df final ######################")
-    print(hist_ptf_df)
+    # print("################ hist_ptf_df final ######################")
+    # print(hist_ptf_df)
 
     return hist_ptf_df
