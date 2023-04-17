@@ -12,6 +12,10 @@ def historical_portfolio(tx_df, custom_prices_df):
     # print(startdate)
     date_range = pd.date_range(start=startdate, end=date.today(), freq='D')
     df_days = pd.DataFrame({'Date': date_range})
+    df_days.loc[:, "Date"] = pd.to_datetime(df_days["Date"], format="%Y-%m-%d")
+    # print("DF DAYS")
+    # print(df_days)
+
 
     ### BUILDING DAILY HISTORICAL PRICES OF ASSETS AND THEIR FX
     assets_data = {}
@@ -84,12 +88,18 @@ def historical_portfolio(tx_df, custom_prices_df):
 
             #### FILTER CUSTOM PRICES JUST FOR THIS ASSET AND REBUILD DAILY HISTORICAL PRICES
             filtered_custom_prices_df = custom_prices_df[custom_prices_df['Asset'] == asset]
-            filtered_custom_prices_df['Unit Price'] = pd.to_numeric(filtered_custom_prices_df['Unit Price'])
-            filtered_custom_prices_df["Date"] = pd.to_datetime(filtered_custom_prices_df["Date"], format="%d/%m/%Y")
+            filtered_custom_prices_df.loc[:, 'Unit Price'] = pd.to_numeric(filtered_custom_prices_df['Unit Price'])
+            # print("BEFORE")
+            # print(filtered_custom_prices_df)
+            filtered_custom_prices_df.loc[:, "Date"] = pd.to_datetime(filtered_custom_prices_df["Date"])
+            # print("AFTER")
+            # print(filtered_custom_prices_df)
             # print("###################### ASSET ##########################")
-            # print(asset)
+            print(asset)
             # print("filtered_custom_prices_df")
             # print(filtered_custom_prices_df)
+            # print("LEN FILTERED CUSTOM PRICES")
+            # print(len(filtered_custom_prices_df))
 
             if not filtered_custom_prices_df.empty:
                 local_start_date=filtered_custom_prices_df["Date"].iloc[0]
@@ -98,6 +108,13 @@ def historical_portfolio(tx_df, custom_prices_df):
 
             # local_date_range = pd.date_range(start=local_start_date, end=date.today(), freq='D')
             # local_df_days = pd.DataFrame({'Date': local_date_range})
+            # print("df_days")
+            # print(df_days)
+            # print("ONE")
+            # print(df_days["Date"])
+            # print("TWO")
+            # print(filtered_custom_prices_df["Date"])
+
             prices = df_days.merge(filtered_custom_prices_df, on="Date", how="outer")
             prices = prices.sort_values(by="Date", ascending=True)
             prices = prices.ffill()
@@ -108,8 +125,10 @@ def historical_portfolio(tx_df, custom_prices_df):
             # print(prices)
             # print("LEN DATES")
             # print(len(date_range))
+            # print(date_range)
             # print("LEN PRICES")
             # print(len(prices))
+            # print(prices)
             asset_prices_df = pd.DataFrame({'Date': date_range, 'Price': prices['Unit Price']})
             asset_prices = asset_prices_df.set_index('Date')
             # print("PRICES 3")
@@ -129,7 +148,7 @@ def historical_portfolio(tx_df, custom_prices_df):
 
     for asset in tx_df['Asset'].unique():
 
-        print("############ " + asset + " ############")
+        # print("############ " + asset + " ############")
         asset_transactions = tx_df[(tx_df['Asset']==asset)]
         asset_transactions = asset_transactions.assign(Date = pd.to_datetime(asset_transactions['Date']))
         asset_transactions = asset_transactions.assign(Quantity = pd.to_numeric(asset_transactions['Quantity']))
@@ -139,13 +158,13 @@ def historical_portfolio(tx_df, custom_prices_df):
         asset_transactions["Cumul_Qty"] = asset_transactions['Quantity'].cumsum()
         asset_transactions = asset_transactions[['Date', 'Cumul_Qty']]
         assets_data[asset]["Qty"] = asset_transactions.set_index(['Date'])
-        print("Done!")
+        # print("Done!")
 
     historical_positions = []
 
     for asset in tx_df['Asset'].unique():
     
-        print("#####" + asset + "######")
+        # print("#####" + asset + "######")
 
         df_list = [assets_data[asset]['Prices'], assets_data[asset]['Qty'], assets_data[asset]['FX_Prices']]
         df = pd.concat(df_list, axis=1).reset_index()
@@ -161,8 +180,10 @@ def historical_portfolio(tx_df, custom_prices_df):
         else:
             df[str('total_position_' + asset)] = df['Cumul_Qty'] * df['Price'] * df['FX_Price']
         df = df.fillna(0)
-        # print("############ DF FILL NA ################")
-        # print(df)
+        print("############ DF FILL NA ################")
+        print(df)
+        if asset == "SGRO.L":
+            df.to_csv("segro.csv")
         historical_positions.append(df)
 
     concat_list = []

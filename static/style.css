@@ -1,7 +1,21 @@
 /* Set default font family and color */
-body {
+  body {
     font-family: Arial, sans-serif;
     color: #333;
+  }
+
+  input {
+    box-sizing: border-box;
+    display: inline-block;
+    margin: 0;
+    padding: 6px 10px;
+    font-size: 14px;
+    line-height: 1.428571429;
+    color: #555;
+    vertical-align: middle;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
   }
   
   /* Center main content */
@@ -28,7 +42,7 @@ body {
     display: flex;
     flex-direction: column;
     margin-bottom: 50px;
-    max-width: 600px;
+    max-width: 800px;
     margin: 0 auto;
   }
   
@@ -37,8 +51,9 @@ body {
     font-weight: bold;
   }
   
-  form input[type="text"],
-  form input[type="email"] {
+  .form input,
+  .form textarea,
+  .form select {
     padding: 10px;
     font-size: 16px;
     border: 1px solid #ccc;

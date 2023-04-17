@@ -1,28 +1,64 @@
-<html>
+<!DOCTYPE html>
+  <html lang="en">
+  <meta charset="UTF-8">
   <head>
     <title>Track</title>
   </head>
   <style>
+    /* add some spacing around your headers */
+    h1 {
+      margin: 20px 0;
+      font-size: 24px;
+    }
+    
+    /* add a border and box shadow to your images */
     img.responsive {
-        max-width: 100%;
-        height: auto;
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #ccc;
+      box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      margin: 20px 0;
+    }
+    
+    /* add some padding to your body */
+    body {
+      padding: 20px;
     }
   </style>
-  <body>
-    <h1>Active Portfolio Report - {{ content.today }}</h1>
-    <img src="{{ content.nav_chart }}" alt="Chart" class="responsive">
-    <br>
-    <img src="{{ content.current_vs_invested_chart }}" alt="Chart" class="responsive">
-    <br>
-    <img src="{{ content.scatter_orders_over_time }}" alt="Chart" class="responsive">
-    <br>
-    <img src="{{ content.pnl_chart }}" alt="Chart" class="responsive">
-    <br>
-    <img src="{{ content.portfolio_today_chart }}" alt="Chart" class="responsive">
-
-
+<body>
+  <header>
+    <h1>Report name: {{ content.report_name }}</h1>
+    <h2>Date: {{ content.now }}</h2>
+    <h2>Note: {{ content.note }}</h2>
+  </header>
+  
+  <main>
+    <section>
+      <h3>Navigation chart</h3>
+      <img src="{{ content.nav_chart }}" alt="Chart" class="responsive">
+    </section>
     
-
+    <section>
+      <h3>Current vs. invested chart</h3>
+      <img src="{{ content.current_vs_invested_chart }}" alt="Chart" class="responsive">
+    </section>
     
-  </body>
+    <section>
+      <h3>Scatter orders over time</h3>
+      <img src="{{ content.scatter_orders_over_time }}" alt="Chart" class="responsive">
+    </section>
+    
+    <section>
+      <h3>P&L chart</h3>
+      <img src="{{ content.pnl_chart }}" alt="Chart" class="responsive">
+    </section>
+    
+    <section>
+      <h3>Portfolio today chart</h3>
+      <img src="{{ content.portfolio_today_chart }}" alt="Chart" class="responsive">
+    </section>
+  </main>
+</body>
+
 </html>

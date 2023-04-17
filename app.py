@@ -60,9 +60,9 @@ def generate_report():
     # Convert datetime objects to dates
     date_range_no_datetime = [dt.date() for dt in date_range]
 
-    print("DATE RANGE IN APP.PY")
-    print(date_range)
-    print("###############")
+    # print("DATE RANGE IN APP.PY")
+    # print(date_range)
+    # print("###############")
 
     # Build historical portfolio
     hist_ptf_df = historical_portfolio(tx_df = tx_df, custom_prices_df=custom_prices_df)
@@ -96,30 +96,46 @@ def generate_report_py():
     # selections from form
     bench = request.form['benchmark']
     url = request.form['url']
+    report_name = request.form['report_name']
+    note = request.form['note']
 
     # Get the tx data and custom prices from the spreadsheet
     tx_df = get_spreadsheet_data_into_a_df(url, sheet_name="Transaction_History")
+    tx_df["Date"] = pd.to_datetime(tx_df["Date"])
+    print("tx_df")
+    print(tx_df)
+
     custom_prices_df = get_spreadsheet_data_into_a_df(url, sheet_name="Custom_Prices")
+    # print("BEFORE CUSTOM PRICES DF")
+    # print(custom_prices_df)
+    # print(custom_prices_df["Date"])
+    custom_prices_df['Date'] = pd.to_datetime(custom_prices_df['Date'], format='%d/%m/%Y')
+    # print("AFTER CUSTOM PRICES DF")
+    # print(custom_prices_df)
 
     # Set report date range and convert datetime objects to dates
     date_range = pd.date_range(start=tx_df["Date"][0], end=date.today(), freq='D')
     date_range_no_datetime = [dt.date() for dt in date_range]
     df_days = pd.DataFrame({'Date': date_range})
+    df_days.loc[:, "Date"] = pd.to_datetime(df_days["Date"], format="%Y-%m-%d")
+
     
     buys_df = orders_by_stock_over_time(tx_df, "BUY", df_days)
     buys_df = buys_df[buys_df['Amount']!= 0]
     print("BUYS DF")
     print(buys_df)
-    buy_bubble_sizes = buys_df['Amount']
+    buy_bubble_sizes = buys_df['Amount'] / 100
 
     sells_df = orders_by_stock_over_time(tx_df, "SELL", df_days)
     sells_df = sells_df[sells_df['Amount']!=0]
     print("SELLS DF")
     print(sells_df)
-    sell_bubble_sizes = sells_df['Amount']
+    sell_bubble_sizes = sells_df['Amount'] / 100
 
     hist_ptf_value_and_cumul_invested_df = hist_ptf_value_and_cumul_invested(tx_df, df_days, custom_prices_df)
+    hist_ptf_value_and_cumul_invested_df.to_csv("hist_ptf_value_and_cumul_invested_df.csv")
     sorted_data = pnl_by_stock_latest(tx_df, custom_prices_df, asset_universe, start_date=tx_df["Date"][0])
+    sorted_data = {k: v for k, v in sorted_data.items() if v != 0}
 
     portfolio_today_df = portfolio_today(tx_df, custom_prices_df, asset_universe)
 
@@ -128,9 +144,16 @@ def generate_report_py():
 
     chart_NAV = NAV_chart(tx_df, custom_prices_df, date_range, bench)
     chart_current_vs_invested = current_vs_invested(hist_ptf_value_and_cumul_invested_df)
+    # print(hist_ptf_value_and_cumul_invested_df)
+    # print(buys_df)
+    # print(sells_df)
     chart_scatter_orders_over_time = scatter_orders_over_time(hist_ptf_value_and_cumul_invested_df.reset_index(), buys_df, sells_df, buy_bubble_sizes, sell_bubble_sizes)
     chart_pnl = pnl_by_stock(sorted_data)
     portfolio_today_chart_file = portfolio_today_chart(portfolio_today_df)
+
+    now = datetime.now()
+    formatted_date = now.strftime("%Y-%m-%d %H:%M:%S")
+
 
     dict_vars = {
         "nav_chart": chart_NAV,
@@ -138,8 +161,10 @@ def generate_report_py():
         "scatter_orders_over_time": chart_scatter_orders_over_time,
         "pnl_chart": chart_pnl,
         "portfolio_today_chart": portfolio_today_chart_file,
-        "today": date.today(),
-        "date_range_no_datetime": date_range_no_datetime
+        "now": formatted_date,
+        "date_range_no_datetime": date_range_no_datetime,
+        "report_name": report_name,
+        "note": note
     }
 
     # Return a response to the user

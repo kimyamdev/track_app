@@ -14,7 +14,7 @@ def pnl_by_stock_latest(tx_df, custom_prices_df, asset_universe, start_date):
     if len(liq_investments) > 0:
 
         # Load historical prices of the individual stocks
-        print(liq_investments)
+        # print(liq_investments)
         quotes = yf.download(tickers=list(liq_investments), start=start_date, interval="1d")
         df_quotes = quotes['Adj Close'].ffill()
         latest_liq_asset_prices = df_quotes[-1:].T
@@ -35,7 +35,7 @@ def pnl_by_stock_latest(tx_df, custom_prices_df, asset_universe, start_date):
         last_custom_prices = custom_prices_df.groupby('Asset')['Unit Price'].last().to_dict()
         revised_prices_dict.update(last_custom_prices)
         latest_asset_prices = {k: float(v) for k, v in revised_prices_dict.items()}
-        print(latest_asset_prices)
+        # print(latest_asset_prices)
 
     else:
         latest_asset_prices = custom_prices_df.groupby('Asset')['Unit Price'].last().to_dict()
@@ -44,8 +44,8 @@ def pnl_by_stock_latest(tx_df, custom_prices_df, asset_universe, start_date):
 
     # create a transactions dataframe with only investments
     transactions = tx_df.loc[(tx_df["Class"] == "Investment") | (tx_df["Class"] == "Venture") | (tx_df["Class"] == "Income")]
-    transactions["Quantity"] = pd.to_numeric(transactions["Quantity"], errors='coerce')
-    transactions["Cost"] = pd.to_numeric(transactions["Cost"], errors='coerce')
+    transactions.loc[:, "Quantity"] = pd.to_numeric(transactions["Quantity"], errors='coerce')
+    transactions.loc[:, "Cost"] = pd.to_numeric(transactions["Cost"], errors='coerce')
     transactions
 
     # group the transactions by asset
@@ -82,8 +82,8 @@ def pnl_by_stock_latest(tx_df, custom_prices_df, asset_universe, start_date):
         # calculate the market value of the remaining shares
         remaining_quantity = buy_transactions["Quantity"].sum() + sell_transactions["Quantity"].sum()
         current_market_value = remaining_quantity * market_prices[asset] if remaining_quantity > 0 else 0
-        print("current_market_value")
-        print(current_market_value)
+        # print("current_market_value")
+        # print(current_market_value)
         current_market_value = float(current_market_value)
         # add dividends
         total_dividends = income_transactions["Quantity"].sum()
@@ -118,14 +118,14 @@ def pnl_by_stock_latest(tx_df, custom_prices_df, asset_universe, start_date):
 
     mapped_dict = {}
     for asset in results['asset']:
-        print(asset)
+        # print(asset)
         if asset in currency_dict:
             ccy = currency_dict[asset]
-            print(ccy)
+            # print(ccy)
             mapped_dict[asset] = results.loc[results['asset'] == asset, 'profits_losses'].values[0] * asset_fx_prices[asset]
 
     sorted_data = dict(sorted(mapped_dict.items(), key=lambda x: x[1], reverse=True))
-    print(sorted_data)
-    print("total PNL in SGD")
-    print(sum(sorted_data.values()))
+    # print(sorted_data)
+    # print("total PNL in SGD")
+    # print(sum(sorted_data.values()))
     return sorted_data

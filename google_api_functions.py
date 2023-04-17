@@ -46,9 +46,11 @@ def get_spreadsheet_data_into_a_df(spreadsheet_url, sheet_name):
     sheet = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=sheet_name).execute()
     # Convert the data to a Pandas DataFrame
     values = sheet.get('values', [])
-    print(values[1:])
-    print(values[0])
+    # print(values[1:])
+    # print(values[0])
     df = pd.DataFrame(values[1:], columns=values[0])
+    #df.loc[:, "Date"] = pd.to_datetime(df["Date"], format="%Y-%m-%d")
+
     print("TX DF FROM GOOGLE SPREADSHEET")
     print(df)
     return df

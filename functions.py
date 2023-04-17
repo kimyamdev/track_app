@@ -27,22 +27,38 @@ def portfolio_vs_benchmark(tx_df, custom_prices_df, date_range):
     hist_ptf_df = historical_portfolio(tx_df, custom_prices_df)
     list_values_NAV = get_NAV(tx_df = tx_df, date_range = date_range, hist_ptf_df=hist_ptf_df)
     bench = request.form['benchmark']
-    benchmark_hist = benchmark_history(bench, startdate=date_range[0], date_range=date_range)
-    list_values_benchmark = benchmark_hist['Price'].tolist()
-    portfolio_vs_benchmark_df = pd.DataFrame([date_range, list_values_benchmark, list_values_NAV], index=['Date', bench, 'portfolio'])
+    if bench != "":
+        benchmark_hist = benchmark_history(bench, startdate=date_range[0], date_range=date_range)
+        list_values_benchmark = benchmark_hist['Price'].tolist()
+        portfolio_vs_benchmark_df = pd.DataFrame([date_range, list_values_benchmark, list_values_NAV], index=['Date', bench, 'portfolio'])
+    else:
+        portfolio_vs_benchmark_df = pd.DataFrame([date_range, list_values_NAV], index=['Date', 'portfolio'])
     return portfolio_vs_benchmark_df
 
 
 def orders_by_stock_over_time(tx_df, type, calendar):
-
-    orders = tx_df[(tx_df['Type']==type) & (tx_df['Class']=="Investment")]
-    orders['Amount'] = pd.to_numeric(orders['FX'])  * pd.to_numeric(orders['Quantity']) * pd.to_numeric(orders['Cost'])
+    print("type")
+    print(type)
+    tx_df["Date"] = pd.to_datetime(tx_df['Date'])
+    orders = tx_df[(tx_df['Type']==type) & ((tx_df['Class']=="Investment") | (tx_df['Class']=="Venture"))]
+    print("orders in orders_by_stock_over_time")
+    print(orders)
+    orders.loc[:, 'FX'] = pd.to_numeric(orders['FX'])
+    orders.loc[:, 'Quantity'] = pd.to_numeric(orders['Quantity'])
+    orders.loc[:, 'Cost'] = pd.to_numeric(orders['Cost'])
+    orders['Amount'] = orders['FX']  * orders['Quantity'] * orders['Cost']
     orders['Date'] = pd.to_datetime(orders['Date'])
+    print("orders in orders_by_stock_over_time 2")
+    print(orders)
+    print(calendar["Date"])
+    print(orders["Date"])
     historical_orders = calendar.merge(orders, on="Date", how="outer")
     historical_orders = historical_orders.fillna(0)
+    print("################### historical orders ##################")
+    print(historical_orders)
     if type == "SELL":
         historical_orders['Amount'] = - historical_orders['Amount']
-    print("################### historical orders ##################")
+    print("################### historical orders 2 ##################")
     print(historical_orders)
     return historical_orders
 
@@ -50,12 +66,16 @@ def orders_by_stock_over_time(tx_df, type, calendar):
 def cumul_invested(transactions_df, calendar):
 
     invested = transactions_df[transactions_df['Type']=='IMPORT']
-    print("########## INVESTED")
-    print(invested)
-    invested['Amount'] = pd.to_numeric(invested['FX'])  * pd.to_numeric(invested['Quantity']) * pd.to_numeric(invested['Cost'])
+    # print("########## INVESTED")
+    # print(invested)
+    invested.loc[:, 'Amount'] = pd.to_numeric(invested.loc[:, 'FX'])  * pd.to_numeric(invested.loc[:, 'Quantity']) * pd.to_numeric(invested.loc[:, 'Cost'])
     imports_by_day = invested.groupby('Date')['Amount'].sum()
     imports_by_day_df = pd.DataFrame(imports_by_day).reset_index()
     imports_by_day_df['Date'] = pd.to_datetime(imports_by_day_df['Date'])
+    # print("calendar['Date']")
+    # print(calendar['Date'])
+    # print("imports_by_day_df['Date']")
+    # print(imports_by_day_df['Date'])
     cumul_invested = calendar.merge(imports_by_day_df, on="Date", how="outer")
     cumul_invested['Amount'] = cumul_invested['Amount'].fillna(0)
     cumul_invested['Cumul'] = cumul_invested['Amount'].cumsum()
