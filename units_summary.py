@@ -50,6 +50,8 @@ def units_summary(tx_df, date_range, hist_ptf_df):
   # print("units summary 4")
   # print(units_summary)
   units_summary.loc[:, 'unit price'] = units_summary.loc[:, 'Total Portfolio Value (SGD)'] / units_summary.loc[:, 'units created cumul']
+  print("units summary 5")
+  print(units_summary)
   units_summary['cumul_gains'] = units_summary['Total Portfolio Value (SGD)'] - units_summary['Cash_Move_SGD_cumul']
   
   return units_summary

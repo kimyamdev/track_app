@@ -24,7 +24,7 @@ from io import BytesIO
 # import functions
 from functions import generate_nav_chart_image, \
 units_history, get_NAV, benchmark_history, portfolio_vs_benchmark, orders_by_stock_over_time, \
-hist_ptf_value_and_cumul_invested, portfolio_today
+hist_ptf_value_and_cumul_invested, portfolio_today, latest_investment_tx
 from google_api_functions import get_spreadsheet_data_into_a_df, send_email
 from pnl import pnl_by_stock_latest
 
@@ -161,10 +161,11 @@ def generate_report_py():
         "scatter_orders_over_time": chart_scatter_orders_over_time,
         "pnl_chart": chart_pnl,
         "portfolio_today_chart": portfolio_today_chart_file,
-        "now": formatted_date,
+        "now": now,
         "date_range_no_datetime": date_range_no_datetime,
         "report_name": report_name,
-        "note": note
+        "note": note,
+        "latest_tx": latest_investment_tx(tx_df)
     }
 
     # Return a response to the user

@@ -5,6 +5,7 @@ fx_universe = {
     "USD": {"Name": "USD", "Ticker": "USDSGD=X"},
     "EUR": {"Name": "EUR", "Ticker": "EURSGD=X"},
     "GBP": {"Name": "GBP", "Ticker": "GBPSGD=X"},
+    "JPY": {"Name": "JPY", "Ticker": "JPYSGD=X"},
 }
 
 

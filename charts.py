@@ -11,7 +11,10 @@ def NAV_chart(tx_df, custom_prices_df, date_range, bench):
     ax.plot(portfolio_vs_benchmark_df.T['Date'], portfolio_vs_benchmark_df.T['portfolio'], label="portfolio")
     if bench != "":
         ax.plot(portfolio_vs_benchmark_df.T['Date'], portfolio_vs_benchmark_df.T[bench], label=bench)
+
     ax.set_title('Portfolio Performance vs ' + bench)
+    if bench == "":
+        ax.set_title('Portfolio Performance')
     ax.set_xlabel('Date')
     ax.set_ylabel('Unit Price')
     ax.legend()
@@ -20,15 +23,20 @@ def NAV_chart(tx_df, custom_prices_df, date_range, bench):
     return chart_file
 
 def current_vs_invested(df):
+    fig, ax1 = plt.subplots(figsize=(15, 10))
+    ax2 = ax1.twinx()
 
-    fig, ax = plt.subplots(figsize=(15, 10))
-    ax.set_title('Portfolio current value in SGD vs cumulative invested')
-    ax.plot(df['Cumul'], label='Cumul Invested')
-    ax.plot(df['Total Portfolio Value (SGD)'], label='Total Portfolio Value SGD')
-    ax.plot(df['Gains_Losses'], label='Gains/Losses')
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Amount (SGD)')
-    ax.legend()
+    ax1.set_title('Portfolio current value in SGD vs cumulative invested')
+    ax1.plot(df['Cumul'], label='Cumul Invested')
+    ax1.plot(df['Total Portfolio Value (SGD)'], label='Total Portfolio Value SGD')
+    ax1.set_xlabel('Date')
+    ax1.set_ylabel('Amount (SGD)')
+    ax1.legend(loc='upper left')
+
+    ax2.plot(df['Gains_Losses'], label='Gains/Losses', color='black')
+    ax2.set_ylabel('Gains/Losses (SGD)')
+    ax2.legend(loc='upper right')
+
     chart_file = 'static/current_vs_invested_chart.png'
     fig.savefig(chart_file)
     return chart_file

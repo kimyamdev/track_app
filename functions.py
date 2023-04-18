@@ -121,3 +121,11 @@ def generate_nav_chart_image(dates, nav_prices):
     plt.savefig(nav_chart_path)
     return nav_chart_path
 
+
+def latest_investment_tx(tx_df):
+
+    df = tx_df[(tx_df["Class"].isin(["Investment", "Venture", "Income"])) & (tx_df["Type"].isin(["BUY", "SELL", "DIVIDEND / INTEREST"]))]
+    df = df.sort_values(by="Date", ascending=False)
+    df = df.head(20)
+    return df
+

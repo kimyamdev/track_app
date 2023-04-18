@@ -43,6 +43,28 @@ def historical_portfolio(tx_df, custom_prices_df):
 
             assets_data[asset]["FX_Prices"] = fx_prices_df
 
+        if asset == 'JPYSGD=X':
+            num = [1] * len(date_range)
+            s = pd.Series(num)
+
+            df_prices = pd.DataFrame({'Date': date_range, 'Price': s * 0.01})
+            fx_prices = pd.DataFrame({'Date': date_range, 'FX_Price': s * 0.01})
+            df_days = pd.DataFrame({'Date': date_range})
+
+            asset_prices = df_days.merge(df_prices, on="Date", how="outer")
+            asset_prices = asset_prices.ffill()
+            asset_prices_df = pd.DataFrame({'Date': date_range, 'Price': asset_prices['Price']})
+            asset_prices_df = asset_prices_df.set_index('Date')
+
+            assets_data[asset] = {"Prices": asset_prices_df}
+
+            fx_prices_df = df_days.merge(fx_prices, on="Date", how="outer")
+            fx_prices_df = fx_prices_df.ffill()
+            fx_prices_df = pd.DataFrame({'Date': date_range, 'FX_Price': fx_prices_df['FX_Price']})
+            fx_prices_df = fx_prices_df.set_index('Date')
+
+            assets_data[asset]["FX_Prices"] = fx_prices_df
+
         elif asset_universe[asset]["Class"] in ["Investment", "Cash"]:
 
             if asset_universe[asset]["Ccy"] == "SGD":
@@ -55,6 +77,24 @@ def historical_portfolio(tx_df, custom_prices_df):
 
 
                 num = [1] * len(date_range)
+                s = pd.Series(num)
+                fx_prices = pd.DataFrame({'Date': date_range, 'FX_Price': s})
+                fx_prices_df = df_days.merge(fx_prices, on="Date", how="outer")
+                fx_prices_df = fx_prices_df.ffill()
+                fx_prices_df = pd.DataFrame({'Date': date_range, 'FX_Price': fx_prices_df['FX_Price']})
+                fx_prices_df = fx_prices_df.set_index('Date')
+                assets_data[asset]["FX_Prices"] = fx_prices_df
+
+            elif asset_universe[asset]["Ccy"] == "JPYSGD=X":
+
+                assets_data[asset] = asset
+                quote = yf.download(tickers=asset, start=startdate, interval="1d")
+                prices = quote['Adj Close'].ffill()
+                asset_prices = pd.DataFrame({'Price': prices})
+                assets_data[asset] = {"Prices": asset_prices}
+
+
+                num = [0.01] * len(date_range)
                 s = pd.Series(num)
                 fx_prices = pd.DataFrame({'Date': date_range, 'FX_Price': s})
                 fx_prices_df = df_days.merge(fx_prices, on="Date", how="outer")
@@ -82,6 +122,9 @@ def historical_portfolio(tx_df, custom_prices_df):
                 fx_quote = yf.download(tickers=asset_universe[asset]["Ccy"], start=startdate, interval="1d")
                 fx_prices = fx_quote['Adj Close'].ffill()
                 fx_prices = pd.DataFrame({'FX_Price': fx_prices})
+                print("############ fx prices per asset ###############")
+                print(asset)
+                print(fx_prices)
                 assets_data[asset]["FX_Prices"] = fx_prices
 
         elif asset_universe[asset]["Class"] == "Venture":
@@ -182,8 +225,10 @@ def historical_portfolio(tx_df, custom_prices_df):
         df = df.fillna(0)
         print("############ DF FILL NA ################")
         print(df)
-        if asset == "SGRO.L":
-            df.to_csv("segro.csv")
+        if asset == "CFA.SI":
+            df.to_csv("CFA.SI.csv")
+        if asset == "CLR.SI":
+            df.to_csv("CLR.SI.csv")
         historical_positions.append(df)
 
     concat_list = []
@@ -211,7 +256,7 @@ def historical_portfolio(tx_df, custom_prices_df):
     hist_ptf_df = hist_ptf_df.reset_index()
     hist_ptf_df = hist_ptf_df.rename({'index': 'Date'}, axis=1)
 
-    # print("################ hist_ptf_df final ######################")
-    # print(hist_ptf_df)
+    print("################ hist_ptf_df final ######################")
+    print(hist_ptf_df)
 
     return hist_ptf_df

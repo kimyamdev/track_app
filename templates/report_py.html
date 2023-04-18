@@ -10,13 +10,40 @@
       margin: 20px 0;
       font-size: 24px;
     }
+
+    header {
+    background-color: #f5f5f5;
+    padding: 20px;
+    margin-bottom: 30px;
+    text-align: center;
+    }
+
+    h1 {
+    margin-top: 0;
+    font-size: 2em;
+    }
+
+    .subtitle {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    color: #999;
+    }
+
+    .note {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 1.2em;
+    color: #333;
+    text-align: left;
+    }
     
     /* add a border and box shadow to your images */
     img.responsive {
       display: block;
       max-width: 100%;
       height: auto;
-      border: 1px solid #ccc;
+      border: 1px dashed #ccc;
       box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
       margin: 20px 0;
     }
@@ -25,17 +52,54 @@
     body {
       padding: 20px;
     }
+
+    section {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 20px;
+    }
+    h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    }
+    ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    }
+    li {
+    margin-bottom: 5px;
+    }
+    .tx-date {
+    font-weight: bold;
+    color: #333;
+    }
+    .tx-type {
+    text-transform: uppercase;
+    font-weight: bold;
+    }
+    .tx-quantity {
+    font-style: italic;
+    }
+    .tx-asset {
+    text-transform: uppercase;
+    }
+    .tx-related {
+    font-style: italic;
+    color: #999;
+    }
   </style>
 <body>
   <header>
-    <h1>Report name: {{ content.report_name }}</h1>
-    <h2>Date: {{ content.now }}</h2>
-    <h2>Note: {{ content.note }}</h2>
+    <h1>{{ content.report_name }}</h1>
+    <p class="subtitle">Generated on {{ content.now.strftime('%B %d, %Y - %I:%M %p') }}</p>
+    <p class="note">{{ content.note }}</p>
   </header>
-  
+  <hr>
+  <br>
   <main>
     <section>
-      <h3>Navigation chart</h3>
+      <h3>Performance of a portfolio unit over time</h3>
       <img src="{{ content.nav_chart }}" alt="Chart" class="responsive">
     </section>
     
@@ -45,19 +109,37 @@
     </section>
     
     <section>
-      <h3>Scatter orders over time</h3>
+      <h3>Orders over time vs P&L</h3>
       <img src="{{ content.scatter_orders_over_time }}" alt="Chart" class="responsive">
     </section>
     
     <section>
-      <h3>P&L chart</h3>
+      <h3>P&L by asset</h3>
       <img src="{{ content.pnl_chart }}" alt="Chart" class="responsive">
+    </section>
+
+    <section>
+      <h3>Portfolio allocation today</h3>
+      <img src="{{ content.portfolio_today_chart }}" alt="Chart" class="responsive">
     </section>
     
     <section>
-      <h3>Portfolio today chart</h3>
-      <img src="{{ content.portfolio_today_chart }}" alt="Chart" class="responsive">
+      <h3>Last 20 transactions</h3>
+      <ul>
+        {% for k, v in content.latest_tx.iterrows() %}
+        <li>
+          <span class="tx-date">{{ v["Date"].strftime('%B %d, %Y') }}:</span> 
+          <span class="tx-type">{{ v["Type"] }}</span> / 
+          <span class="tx-quantity">{{ v["Quantity"] }} units</span> of 
+          <span class="tx-asset">{{ v["Asset"] }}</span>
+          {% if v["Type"] == 'DIVIDEND / INTEREST' %}
+          <span class="tx-related">(related to {{ v["Underlying_Asset"] }})</span>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
     </section>
+
   </main>
 </body>
 
