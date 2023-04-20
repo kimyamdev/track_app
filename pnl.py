@@ -1,7 +1,7 @@
 import pandas as pd
 from historical_positions import historical_portfolio
 from functions import portfolio_today
-from assets import asset_universe, investments, uk_stocks, liq_investments
+from static_meta import asset_universe, investments, uk_stocks, liq_investments
 import yfinance as yf
 from datetime import date, datetime, timedelta
 

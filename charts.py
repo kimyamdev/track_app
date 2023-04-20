@@ -1,6 +1,12 @@
 from functions import portfolio_vs_benchmark
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import matplotlib.dates as mdates
+from matplotlib.dates import DateFormatter
+
+import pandas as pd
+
+
 
 
 
@@ -142,5 +148,37 @@ def portfolio_today_chart(portfolio_today_df):
     for wedge in ax.patches:
         wedge.set_alpha(0.5)
     chart_file = 'static/portfolio_today_chart.png'
+    fig.savefig(chart_file)
+    return chart_file
+
+def asset_class_split(new_df, report_name):
+    new_df = new_df.to_frame().reset_index()
+    new_df['Date'] = pd.to_datetime(new_df['Date'], format='%Y-%m-%d')
+    # Pivot the data to get Asset_Class as columns and Position_SGD as values
+    df_pivot = new_df.pivot(index='Date', columns='Asset_Class', values='Position_SGD').reset_index()
+    df_pivot.to_csv("df_pivot.csv")
+    # Calculate the percentage of each column of the total of each row
+    total = df_pivot.iloc[:, 1:].sum(axis=1)
+    df_perc = df_pivot.iloc[:, 1:].apply(lambda x: 100 * x / total, axis=0)
+    # Concatenate the percentage DataFrame with the original DataFrame
+    df_perc.insert(loc=0, column='Date', value=df_pivot['Date'])
+    df_perc = df_perc.set_index('Date')
+    # convert the index to a DatetimeIndex object
+    date_index = pd.DatetimeIndex(df_perc.index)
+    # format the index as a series of date strings
+    date_strings = date_index.strftime('%Y-%m-%d')
+    # create a new DataFrame with the formatted index
+    df_new = pd.DataFrame(df_perc.values, index=date_strings, columns=df_perc.columns)
+
+    fig, ax = plt.subplots(figsize=(15, 10))
+    ax = df_new.plot.bar(stacked=True, rot=45, ax=ax)
+    # Add labels and title
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Position (SGD)')
+    ax.set_title('Asset Class Position over Time - '+report_name)
+    date_locator = mdates.WeekdayLocator(interval=2)
+    ax.xaxis.set_major_locator(date_locator)
+
+    chart_file = 'static/asset_classes_split_chart.png'
     fig.savefig(chart_file)
     return chart_file

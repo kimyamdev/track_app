@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta
 import yfinance as yf
-from assets import fx_universe, asset_universe, investments, uk_stocks
+from static_meta import fx_universe, asset_universe, investments, uk_stocks
 import pandas as pd
 
 
@@ -122,9 +122,9 @@ def historical_portfolio(tx_df, custom_prices_df):
                 fx_quote = yf.download(tickers=asset_universe[asset]["Ccy"], start=startdate, interval="1d")
                 fx_prices = fx_quote['Adj Close'].ffill()
                 fx_prices = pd.DataFrame({'FX_Price': fx_prices})
-                print("############ fx prices per asset ###############")
-                print(asset)
-                print(fx_prices)
+                # print("############ fx prices per asset ###############")
+                # print(asset)
+                # print(fx_prices)
                 assets_data[asset]["FX_Prices"] = fx_prices
 
         elif asset_universe[asset]["Class"] == "Venture":
@@ -204,6 +204,7 @@ def historical_portfolio(tx_df, custom_prices_df):
         # print("Done!")
 
     historical_positions = []
+    historical_asset_cl = []
 
     for asset in tx_df['Asset'].unique():
     
@@ -216,7 +217,11 @@ def historical_portfolio(tx_df, custom_prices_df):
         df['Asset'] = asset
         df['Class'] = asset_universe[asset]["Class"]
         df['Currency'] = asset_universe[asset]["Ccy"]
+        df['Asset_Class'] = asset_universe[asset]["Asset_Class"]
         df = df.fillna(0)
+        print("Df")
+        print(df)
+        historical_asset_cl.append(df[['Date', 'Price', 'Cumul_Qty', 'FX_Price', 'Asset', 'Class', 'Currency', 'Asset_Class']])
 
         if asset_universe[asset]['Class'] == 'Cash':
             df[str('total_position_'+ asset)] = df['Cumul_Qty'] * df['Price']
@@ -225,17 +230,31 @@ def historical_portfolio(tx_df, custom_prices_df):
         df = df.fillna(0)
         print("############ DF FILL NA ################")
         print(df)
-        if asset == "CFA.SI":
-            df.to_csv("CFA.SI.csv")
-        if asset == "CLR.SI":
-            df.to_csv("CLR.SI.csv")
+        # if asset == "CFA.SI":
+        #     df.to_csv("CFA.SI.csv")
+        # if asset == "CLR.SI":
+        #     df.to_csv("CLR.SI.csv")
         historical_positions.append(df)
 
     concat_list = []
 
+    vertical_concat = pd.concat(historical_asset_cl, axis=0)
+    print("vertical_concat")
+    print(vertical_concat)
+
+    vertical_concat['Position_SGD'] = vertical_concat['Price'] * vertical_concat['Cumul_Qty'] * vertical_concat['FX_Price']
+
+    # Assuming your DataFrame is named df
+    new_df = vertical_concat.groupby(['Date', 'Asset_Class'])['Position_SGD'].sum()
+
+    print(new_df)
+    new_df.to_csv("new_df.csv")
+
     for df in historical_positions:
-        df = df.filter(regex=("total_position_.*"))
-        concat_list.append(df)
+        filtered_df = df.filter(regex=("total_position_.*"))
+        print("filtered_df")
+        print(filtered_df)
+        concat_list.append(filtered_df)
 
     hist_ptf_df = pd.concat(concat_list, axis=1)
     hist_ptf_df = hist_ptf_df.ffill()
@@ -256,7 +275,7 @@ def historical_portfolio(tx_df, custom_prices_df):
     hist_ptf_df = hist_ptf_df.reset_index()
     hist_ptf_df = hist_ptf_df.rename({'index': 'Date'}, axis=1)
 
-    print("################ hist_ptf_df final ######################")
-    print(hist_ptf_df)
+    # print("################ hist_ptf_df final ######################")
+    # print(hist_ptf_df)
 
-    return hist_ptf_df
+    return hist_ptf_df, new_df

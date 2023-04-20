@@ -24,7 +24,7 @@ def benchmark_history(ticker, startdate, date_range):
 
 def portfolio_vs_benchmark(tx_df, custom_prices_df, date_range):
 
-    hist_ptf_df = historical_portfolio(tx_df, custom_prices_df)
+    hist_ptf_df, new_df = historical_portfolio(tx_df, custom_prices_df)
     list_values_NAV = get_NAV(tx_df = tx_df, date_range = date_range, hist_ptf_df=hist_ptf_df)
     bench = request.form['benchmark']
     if bench != "":
@@ -83,15 +83,15 @@ def cumul_invested(transactions_df, calendar):
     return cumul_invested
 
 def hist_ptf_value_and_cumul_invested(tx_df, calendar, custom_prices_df):
-
-    hist_ptf_value_and_cumul_invested = cumul_invested(tx_df, calendar)[['Date', 'Cumul']].merge(historical_portfolio(tx_df, custom_prices_df), on="Date", how="outer")
+    hist_ptf_df, new_df = historical_portfolio(tx_df, custom_prices_df)
+    hist_ptf_value_and_cumul_invested = cumul_invested(tx_df, calendar)[['Date', 'Cumul']].merge(hist_ptf_df, on="Date", how="outer")
     hist_ptf_value_and_cumul_invested = hist_ptf_value_and_cumul_invested.set_index('Date')
     hist_ptf_value_and_cumul_invested['Gains_Losses'] = hist_ptf_value_and_cumul_invested['Total Portfolio Value (SGD)'] - hist_ptf_value_and_cumul_invested['Cumul']
     return hist_ptf_value_and_cumul_invested
 
 def portfolio_today(tx_df, custom_prices_df, asset_universe):
 
-    hist_ptf_df = historical_portfolio(tx_df, custom_prices_df)
+    hist_ptf_df, new_df = historical_portfolio(tx_df, custom_prices_df)
     p = hist_ptf_df.tail(1).T.reset_index()
     p = p.rename(columns={p.columns[0]: "attr", p.columns[1]: "val"})
     portfolio_today = p.loc[p.attr.str.match('total_position_.*'), :]

@@ -29,8 +29,9 @@ from google_api_functions import get_spreadsheet_data_into_a_df, send_email
 from pnl import pnl_by_stock_latest
 
 from historical_positions import historical_portfolio
-from charts import NAV_chart, current_vs_invested, scatter_orders_over_time, pnl_by_stock, portfolio_today_chart
-from assets import asset_universe, investments, uk_stocks
+from charts import NAV_chart, current_vs_invested, scatter_orders_over_time, pnl_by_stock, portfolio_today_chart, \
+    asset_class_split
+from static_meta import asset_universe, investments, uk_stocks
 
 # import charts
 
@@ -65,7 +66,7 @@ def generate_report():
     # print("###############")
 
     # Build historical portfolio
-    hist_ptf_df = historical_portfolio(tx_df = tx_df, custom_prices_df=custom_prices_df)
+    hist_ptf_df, new_df = historical_portfolio(tx_df = tx_df, custom_prices_df=custom_prices_df)
 
     # Build units summary
     units_history_df = units_history(tx_df = tx_df, date_range = date_range, hist_ptf_df=hist_ptf_df)
@@ -132,6 +133,9 @@ def generate_report_py():
     print(sells_df)
     sell_bubble_sizes = sells_df['Amount'] / 100
 
+    # Build historical portfolio
+    hist_ptf_df, new_df = historical_portfolio(tx_df = tx_df, custom_prices_df=custom_prices_df)
+
     hist_ptf_value_and_cumul_invested_df = hist_ptf_value_and_cumul_invested(tx_df, df_days, custom_prices_df)
     hist_ptf_value_and_cumul_invested_df.to_csv("hist_ptf_value_and_cumul_invested_df.csv")
     sorted_data = pnl_by_stock_latest(tx_df, custom_prices_df, asset_universe, start_date=tx_df["Date"][0])
@@ -150,6 +154,8 @@ def generate_report_py():
     chart_scatter_orders_over_time = scatter_orders_over_time(hist_ptf_value_and_cumul_invested_df.reset_index(), buys_df, sells_df, buy_bubble_sizes, sell_bubble_sizes)
     chart_pnl = pnl_by_stock(sorted_data)
     portfolio_today_chart_file = portfolio_today_chart(portfolio_today_df)
+    asset_class_split_file = asset_class_split(new_df, report_name)
+
 
     now = datetime.now()
     formatted_date = now.strftime("%Y-%m-%d %H:%M:%S")
@@ -161,6 +167,7 @@ def generate_report_py():
         "scatter_orders_over_time": chart_scatter_orders_over_time,
         "pnl_chart": chart_pnl,
         "portfolio_today_chart": portfolio_today_chart_file,
+        "asset_classes_split_chart": asset_class_split_file,
         "now": now,
         "date_range_no_datetime": date_range_no_datetime,
         "report_name": report_name,
